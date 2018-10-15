@@ -9,6 +9,7 @@ addons:
     packages:
     - g++-8
     - libboost-dev
+    - libboost-system-dev
     - libgtest-dev
     - cmake
 
