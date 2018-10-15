@@ -8,6 +8,7 @@ addons:
     - ubuntu-toolchain-r-test
     packages:
     - g++-8
+    - libboost-dev
     - libgtest-dev
     - cmake
 
