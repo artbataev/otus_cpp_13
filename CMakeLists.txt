@@ -17,6 +17,7 @@ include_directories("${PROJECT_SOURCE_DIR}/include")
 
 add_executable(join_server
         src/entry_point.cpp
+        src/string_utils.cpp include/string_utils.h
         src/database.cpp include/database.h
         src/server.cpp include/server.h)
 

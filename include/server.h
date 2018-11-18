@@ -1,6 +1,7 @@
 #pragma once
 
 #include "boost/asio.hpp"
+#include <unordered_set>
 
 namespace ba = boost::asio;
 
@@ -8,14 +9,17 @@ class AsyncProcessor : public std::enable_shared_from_this<AsyncProcessor> {
 public:
     explicit AsyncProcessor(ba::ip::tcp::socket socket_);
 
-//    void receive_and_process();
+    void receive_and_process();
+    ~AsyncProcessor();
 
 private:
-//    void receive_and_process_loop(const boost::system::error_code& ec, size_t size_read);
+    void receive_and_process_loop(const boost::system::error_code& ec, size_t size_read);
 
     ba::ip::tcp::socket client_socket;
-    char buffer_data[256];
+    ba::streambuf buffer_data;
     std::shared_ptr<AsyncProcessor> self;
+    const std::unordered_set<std::string> allowed_commands;
+    const std::unordered_set<std::string> allowed_tables;
 };
 
 class Server {
