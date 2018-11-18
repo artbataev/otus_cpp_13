@@ -33,6 +33,8 @@ void AsyncProcessor::receive_and_process_loop(const boost::system::error_code& e
     std::getline(std::istream(&buffer_data), full_command);
     std::vector<std::string> command_with_arguments = split(full_command, ' ');
 
+    std::stringstream result;
+
     try {
         if (command_with_arguments.empty())
             throw std::logic_error("incorrect buffer");
@@ -40,11 +42,11 @@ void AsyncProcessor::receive_and_process_loop(const boost::system::error_code& e
         if (command == "INTERSECTION") {
             if (command_with_arguments.size() != 1)
                 throw std::logic_error("INTERSECTION command should have no arguments");
-            std::cout << db.intersection();
+            result << db.intersection();
         } else if (command == "SYMMETRIC_DIFFERENCE") {
             if (command_with_arguments.size() != 1)
                 throw std::logic_error("SYMMETRIC_DIFFERENCE command should have no arguments");
-            std::cout << db.symmetric_difference();
+            result << db.symmetric_difference();
         } else if (command == "TRUNCATE") {
             if (command_with_arguments.size() != 2)
                 throw std::logic_error("TRUNCATE command should have 1 argument");
@@ -58,17 +60,23 @@ void AsyncProcessor::receive_and_process_loop(const boost::system::error_code& e
             std::string table = command_with_arguments[1];
             if (allowed_tables.count(table) == 0)
                 throw std::logic_error("Unknown table " + table);
-            int id = std::stoi(command_with_arguments[2]);
+            int id;
+            try {
+                id = std::stoi(command_with_arguments[2]);
+            } catch (std::invalid_argument& e) {
+                throw std::logic_error("Id must be integer");
+            }
             if (!db.insert(table, id, command_with_arguments[3]))
                 throw std::logic_error("duplicate " + std::to_string(id));
         } else
             throw std::logic_error("Unknown command " + command);
 
-        std::cout << "OK\n";
+        result << "OK\n";
     } catch (const std::logic_error& e) {
-        std::cout << "ERR " << e.what() << "\n";
+        result << "ERR " << e.what() << "\n";
     }
 
+    client_socket.write_some(ba::buffer(result.str()));
     ba::async_read_until(client_socket, buffer_data, '\n',
                          [this](const boost::system::error_code& ec, size_t size_read) {
                              receive_and_process_loop(ec, size_read);
@@ -89,7 +97,7 @@ Server::Server(int port_) :
 
 
 void Server::run() {
-    ba::signal_set signal_set(server_service, SIGTERM, SIGINT); // interrupt, kill
+    ba::signal_set signal_set{server_service, SIGTERM, SIGINT}; // interrupt, kill
     signal_set.async_wait(
             [this](const boost::system::error_code& ec, int signal_number) {
                 server_service.stop();
