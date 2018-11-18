@@ -13,11 +13,15 @@ find_package(Threads)
 include_directories(${Boost_INCLUDE_DIR})
 
 
-#include_directories("${PROJECT_SOURCE_DIR}/include")
-add_executable(join_server src/main.cpp)
+include_directories("${PROJECT_SOURCE_DIR}/include")
+
+add_library(db_table src/db_table.cpp
+        include/db_table.h)
+add_executable(join_server src/entry_point.cpp)
 
 target_link_libraries(
         join_server
+        db_table
         ${Boost_LIBRARIES}
         ${CMAKE_THREAD_LIBS_INIT}
 )
